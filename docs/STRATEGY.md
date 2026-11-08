@@ -67,6 +67,9 @@ assertion, L4 ×5 agent flows. Stretch goes to 40+ with semantic-similarity chec
   tracked over time (P1-05). A case that disagrees in two consecutive runs is reviewed: tighten the assertion, or file
   a model-behaviour bug.
 - Temperature stays at 0 on the system under test to reduce, not remove, variation.
+- **First measurement (2026-11-08):** 5 runs × 48 tests with one sample each → 1 test changed outcome (2.1%; 4.2% of
+  model-dependent tests): a false refusal on "Apa itu obligasi?" in 1 of 5 runs. Decision: keep the 3× vote, leave the
+  assertion as is, log the behaviour as risk R16.
 
 ## 6. Where tests run **[D]**
 
