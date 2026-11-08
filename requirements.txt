@@ -1,3 +1,4 @@
 pytest>=8.0
 playwright>=1.48     # APIRequestContext as the HTTP client; UI tests later need: playwright install chromium
 pydantic>=2.7        # response contracts
+anthropic>=2.6     # LLM-as-judge (pytest -m judge)

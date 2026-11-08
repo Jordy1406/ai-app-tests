@@ -57,6 +57,26 @@ assertion, L4 ×5 agent flows. Stretch goes to 40+ with semantic-similarity chec
   the schema and the rubric, and is **measured** by judging the same answers 3 times and reporting disagreement. Judge
   reasons are stored in the report. The judge is never the model under test, which avoids self-grading bias.
 
+### 4a. Judge implementation and its risks (P1-04)
+
+Implemented in `tests/judge.py`; run with `pytest -m judge` (never in the default run).
+
+- **Inputs:** question, answer, and the text of every cited chunk, looked up by chunk id in finassist-app's
+  `data/index.json` (the API returns ids, not text). The judge grades against the cited text only.
+- **Output:** `{relevance 1-5, support 1-5, reason}` via structured outputs (`messages.parse` with a Pydantic model);
+  pass at ≥ 4 on both. Every verdict and reason is appended to `reports/judge.jsonl`.
+- **Refusal:** if Claude declines, the result is *inconclusive* (test error), not a score. Server-side model fallback
+  is deliberately off so that every score comes from the same judge model.
+
+| Judge risk | Why it matters here | Mitigation now | Later |
+|---|---|---|---|
+| Not calibrated | Agreement with a human is unknown; a 4 may mean different things to me and to Claude | judge results are reported, not used as a release gate | P2-08: Cohen's kappa against my 50 labels |
+| Leniency on true-but-unsourced claims | Claude knows finance; it may credit a correct claim the source does not contain (exactly BUG-002's failure) | rubric says "use only the cited text"; sukuk case is the canary | P2: cases where the answer is true but unsupported |
+| Non-determinism | `claude-opus-5-5` takes no `temperature`; the same answer can get different scores | fixed rubric + schema; consistency test judges one answer 3× and fails if pass/fail flips | track score spread over time |
+| Language | rubric in English, answers and sources in Bahasa Indonesia | reasons are short and in English for the report | P2: check on misgraded Indonesian nuance |
+| Index drift | chunk ids must match the target's index | missing ids raise an error instead of grading against nothing | pin index to the finassist-app commit |
+| Cost | every case is a paid call | judge suite is small and scheduled; never per PR | cache verdicts for unchanged answers |
+
 ## 5. Non-determinism and flakiness **[D]**
 
 - **Deterministic layers (L1, L2 on a recorded response) must never be flaky.** A flaky contract or rule test is a bug

@@ -3,9 +3,25 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import pytest
 from playwright.sync_api import APIRequestContext, sync_playwright
+
+
+def _load_dotenv(path: Path = Path(".env")) -> None:
+    """Minimal .env loader (KEY=VALUE lines); real environment variables win. Avoids an extra dependency."""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            if value.strip():
+                os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv()
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 # Model calls on a laptop can take a while (cold model load ~70 s).
